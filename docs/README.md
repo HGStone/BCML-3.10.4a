@@ -6,6 +6,11 @@ A mod merging and managing tool for _The Legend of Zelda: Breath of the Wild_
 
 ![BCML Banner](https://i.imgur.com/vmZanVl.png)
 
+## 3.10.9 Explanation
+
+This is an attempt to revert changes to BCML that broke old mod support, while still keeping the other changes that came after 3.10.4. 
+Also attempting to build standalone executables for cross platform usage, possibly even for MacOS
+
 ## Purpose
 
 Why a mod loader for BOTW? Installing a mod is usually easy enough once you have a
