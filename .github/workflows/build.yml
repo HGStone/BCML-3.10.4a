@@ -19,18 +19,22 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: macOS Fix – Install gettext for Python 3.8
+      - name: macOS Fix – Use Homebrew Python 3.8
         if: runner.os == 'macOS'
         run: |
-          brew install gettext
-          brew link gettext --force
-          echo "DYLD_LIBRARY_PATH=/usr/local/opt/gettext/lib" >> $GITHUB_ENV
+          brew install python@3.8
+          echo "/usr/local/opt/python@3.8/bin" >> $GITHUB_PATH
+          echo "PYTHON_LOCATION=/usr/local/opt/python@3.8/bin/python3.8" >> $GITHUB_ENV
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.8 (Linux/Windows only)
+        if: runner.os != 'macOS'
         uses: actions/setup-python@v5
         with:
           python-version: '3.8'
           architecture: x64
+
+      - name: Display Python version
+        run: python3 --version || python --version
 
       - name: Install Rust (for zstandard, etc.)
         uses: actions-rs/toolchain@v1
@@ -41,15 +45,11 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        env:
-          DYLD_LIBRARY_PATH: /usr/local/opt/gettext/lib
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt || pip install -r requirements.txt
 
       - name: Install PyInstaller
-        run: pip install pyinstaller
-        env:
-          DYLD_LIBRARY_PATH: /usr/local/opt/gettext/lib
+        run: pip3 install pyinstaller || pip install pyinstaller
 
       - name: Build Executable
         run: |
@@ -57,8 +57,6 @@ jobs:
             --name bcml-${{ runner.os }}-${{ github.ref_name }} \
             --icon bcml/data/bcml.ico \
             -c bcml/__main__.py
-        env:
-          DYLD_LIBRARY_PATH: /usr/local/opt/gettext/lib
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
