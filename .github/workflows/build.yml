@@ -1,98 +1,54 @@
-name: Build
+# .github/workflows/build.yml
+
+name: Build Standalone BCML Executables
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
-
-env:
-  CARGO_TERM_COLOR: always
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+    branches: [ main ]
 
 jobs:
-  check_changes:
-    name: Check changes
-    runs-on: ubuntu-latest
-    outputs:
-      npm_assets_changed: ${{ steps.get_changes.outputs.npm_assets }}
-      rust_src_changed: ${{ steps.get_changes.outputs.rust_src }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v2
-        id: get_changes
-        with:
-          filters: |
-            npm_assets:
-              - 'bcml/assets/**'
-            rust_src:
-              - 'src/**'
-              - 'bootstrap.sh'
-              - 'Cargo.toml'
-              - 'pyproject.toml'
-
-  npm_build:
-    name: npm build
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.npm_assets_changed == 'true' }}
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [14.x, 15.x, 16.x, 17.x, 18.x]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8.10
+        uses: actions/setup-python@v5
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm ci
-        working-directory: bcml/assets
-      - run: npm run build
-        working-directory: bcml/assets
+          python-version: 3.8.10
+          architecture: x64
 
-  maturin_build_linux:
-    name: Maturin (Linux)
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.rust_src_changed == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        profile: default
-        components: rustfmt, rust-src
-    - name: install-cmake
-      uses: Symbitic/install-cmake@v0.1.0
-    - name: Patch roead version
-      run: sed -i 's/<0.10.4/0.10.4/g' Cargo.toml
-    - name: Check
-      run: cargo +nightly check --verbose
-    - uses: messense/maturin-action@v1
-      with:
-        maturin-version: latest
-        command: build
-        args: --release
-        rust-toolchain: nightly
+      - name: Install Rust (for zstandard, etc.)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
-  maturin_build_win:
-    name: Maturin (Windows)
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.rust_src_changed == 'true' }}
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        profile: default
-        components: rustfmt, rust-src
-    - uses: messense/maturin-action@v1
-      name: Build with Maturin
-      with:
-        maturin-version: latest
-        command: build
-        args: --release
-        rust-toolchain: nightly
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build Executable
+        run: |
+          pyinstaller --onefile \
+            --name bcml-${{ runner.os }}-${{ github.ref_name }} \
+            --icon bcml/data/bcml.ico \
+            -c bcml/__main__.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bcml-${{ runner.os }}-${{ github.ref_name }}
+          path: dist/bcml-${{ runner.os }}-${{ github.ref_name }}
