@@ -42,18 +42,15 @@ jobs:
 
       - name: Build Executable
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            pyinstaller --onefile --name bcml-${{ runner.os }}-${{ github.ref_name }} --icon bcml/data/bcml.ico -c bcml/__main__.py
-          else
-            pyinstaller --onefile \
-              --name bcml-${{ runner.os }}-${{ github.ref_name }} \
-              --icon bcml/data/bcml.ico \
-              -c bcml/__main__.py
-          fi
+          pyinstaller --onefile \
+            --name bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9 \
+            --icon bcml/data/bcml.ico \
+            -c bcml/__main__.py
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bcml-${{ runner.os }}-${{ github.ref_name }}
-          path: dist/bcml-${{ runner.os }}-${{ github.ref_name }}
+          name: bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9
+          path: dist/bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9
+          if-no-files-found: warn
