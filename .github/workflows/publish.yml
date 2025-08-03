@@ -1,1 +1,15 @@
-# This workflow has been disabled
+# .github/workflows/publish.yml
+
+name: Dummy Publish Workflow
+
+description: This is a placeholder to avoid GitHub Actions failure.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "This is a dummy workflow to avoid failure."
