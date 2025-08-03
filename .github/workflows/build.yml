@@ -8,17 +8,6 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  build:# .github/workflows/build.yml
-
-name: Build Standalone BCML Executables
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 env:
   BCML_VERSION: 3.10.9
 
@@ -83,48 +72,3 @@ jobs:
         with:
           name: bcml-linux-${{ env.BCML_VERSION }}
           path: dist/bcml-linux-${{ env.BCML_VERSION }}
-
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.8 (latest patch)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.8'
-          architecture: x64
-
-      - name: Install Rust (for zstandard, etc.)
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install PyInstaller
-        run: pip install pyinstaller
-
-      - name: Build Executable
-        run: |
-          pyinstaller --onefile \
-            --name bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9 \
-            --icon bcml/data/bcml.ico \
-            -c bcml/__main__.py
-        shell: bash
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9
-          path: dist/bcml-${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}-3.10.9
-          if-no-files-found: warn
