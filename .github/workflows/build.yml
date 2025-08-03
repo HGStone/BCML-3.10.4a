@@ -43,12 +43,15 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Build Executable
+      - name: Build Executable (Linux)
+        if: runner.os == 'Linux'
         run: |
-          pyinstaller --onefile \
-            --name bcml \
-            --icon bcml/data/bcml.ico \
-            -c bcml/__main__.py
+          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py
+
+      - name: Build Executable (Windows)
+        if: runner.os == 'Windows'
+        run: pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py
+        shell: pwsh
 
       - name: Rename Windows binary
         if: runner.os == 'Windows'
