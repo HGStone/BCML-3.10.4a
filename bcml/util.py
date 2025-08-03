@@ -37,8 +37,8 @@ import xxhash  # pylint: disable=wrong-import-order
 from oead.aamp import ParameterIO, ParameterList  # pylint:disable=import-error
 from webview import Window  # pylint: disable=wrong-import-order
 
-from bcml import bcml as rsext, locks
-from bcml import pickles, DEBUG  # pylint: disable=unused-import
+import bcml as rsext
+from bcml import locks, pickles, DEBUG  # this is fine
 from bcml.__version__ import VERSION
 
 
@@ -1587,3 +1587,4 @@ def get_7z_path():
 
 LOG = get_data_dir() / "bcml.log"
 SYSTEM = system()
+
