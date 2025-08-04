@@ -3,10 +3,7 @@
 name: Build Standalone BCML Executables
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 env:
   BCML_VERSION: 3.10.9
