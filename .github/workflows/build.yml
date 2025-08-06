@@ -40,31 +40,34 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Locate aamp text data files
-        id: locate_aamp
+      - name: Debug aamp paths (optional visibility)
         run: |
-          # capture all txt paths into a variable with newline separation
-          AAMP_TXT_LIST=$(python get_requirements.py)
-          echo "AAMP_TXT_LIST<<EOF" >> $GITHUB_ENV
-          echo "$AAMP_TXT_LIST" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        shell: bash
+          echo "=== Locating aamp .txt files ==="
+          python get_requirements.py || true
 
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           set -e
+          echo "CWD before build: $(pwd)"
+          # get all aamp .txts, strip stray CRs
           AAMP_FILES=$(python get_requirements.py | tr -d '\r')
+          echo "AAMP text files to include:"
+          echo "$AAMP_FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
+            # Linux uses colon separator
             ADD_ARGS+=(--add-data "$f:aamp")
           done <<< "$AAMP_FILES"
+          echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
+          echo "Build output directory listing:"
+          ls -l dist || true
           if [[ -f dist/bcml ]]; then
             mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
           else
-            echo "ERROR: dist/bcml was not created!" >&2
+            echo "ERROR: dist/bcml not found after build" >&2
             exit 1
           fi
 
@@ -73,27 +76,25 @@ jobs:
         shell: bash
         run: |
           set -e
+          echo "CWD before build: $(pwd)"
           AAMP_FILES=$(python get_requirements.py | tr -d '\r')
+          echo "AAMP text files to include:"
+          echo "$AAMP_FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
+            # Windows uses semicolon separator
             ADD_ARGS+=(--add-data "$f;aamp")
           done <<< "$AAMP_FILES"
+          echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
+          echo "Build output directory listing:"
+          ls -l dist || true
           if [[ -f dist/bcml.exe ]]; then
             mv dist/bcml.exe dist/bcml-windows-${{ env.BCML_VERSION }}.exe
           else
-            echo "ERROR: dist/bcml.exe was not created!" >&2
+            echo "ERROR: dist/bcml.exe not found after build" >&2
             exit 1
           fi
-
-      - name: Rename Windows binary
-        if: runner.os == 'Windows'
-        run: Rename-Item -Path dist\bcml.exe -NewName bcml-windows-${{ env.BCML_VERSION }}.exe
-        shell: pwsh
-
-      - name: Rename Linux binary
-        if: runner.os == 'Linux'
-        run: mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
 
       - name: Upload artifact (Windows)
         if: runner.os == 'Windows'
