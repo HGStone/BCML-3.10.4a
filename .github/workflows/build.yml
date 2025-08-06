@@ -40,10 +40,10 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Debug aamp paths (optional visibility)
+      - name: Debug collected runtime files
         run: |
-          echo "=== Locating aamp .txt files ==="
-          python get_requirements.py || true
+          echo "=== Gathering runtime data files from aamp and rstb ==="
+          python collect_runtime_files.py || true
 
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
@@ -51,23 +51,21 @@ jobs:
         run: |
           set -e
           echo "CWD before build: $(pwd)"
-          # get all aamp .txts, strip stray CRs
-          AAMP_FILES=$(python get_requirements.py | tr -d '\r')
-          echo "AAMP text files to include:"
-          echo "$AAMP_FILES"
+          FILES=$(python collect_runtime_files.py | tr -d '\r')
+          echo "Runtime data files to include:"
+          echo "$FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
-            # Linux uses colon separator
             ADD_ARGS+=(--add-data "$f:aamp")
-          done <<< "$AAMP_FILES"
+          done <<< "$FILES"
           echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
-          echo "Build output directory listing:"
+          echo "Dist contents:"
           ls -l dist || true
           if [[ -f dist/bcml ]]; then
             mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
           else
-            echo "ERROR: dist/bcml not found after build" >&2
+            echo "ERROR: dist/bcml missing after build" >&2
             exit 1
           fi
 
@@ -77,22 +75,21 @@ jobs:
         run: |
           set -e
           echo "CWD before build: $(pwd)"
-          AAMP_FILES=$(python get_requirements.py | tr -d '\r')
-          echo "AAMP text files to include:"
-          echo "$AAMP_FILES"
+          FILES=$(python collect_runtime_files.py | tr -d '\r')
+          echo "Runtime data files to include:"
+          echo "$FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
-            # Windows uses semicolon separator
             ADD_ARGS+=(--add-data "$f;aamp")
-          done <<< "$AAMP_FILES"
+          done <<< "$FILES"
           echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
-          echo "Build output directory listing:"
+          echo "Dist contents:"
           ls -l dist || true
           if [[ -f dist/bcml.exe ]]; then
             mv dist/bcml.exe dist/bcml-windows-${{ env.BCML_VERSION }}.exe
           else
-            echo "ERROR: dist/bcml.exe not found after build" >&2
+            echo "ERROR: dist/bcml.exe missing after build" >&2
             exit 1
           fi
 
