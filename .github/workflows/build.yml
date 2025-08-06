@@ -40,14 +40,20 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
+      - name: Locate botw_hashed_names.txt from aamp
+        id: locate_aamp
+        run: |
+          echo "AAMP_TXT=$(python get_requirements.py)" >> $GITHUB_ENV
+
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
         run: |
-          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py
+          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py --add-data "${{ env.AAMP_TXT }}:aamp"
 
       - name: Build Executable (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py
+        run: |
+          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py --add-data "${{ env.AAMP_TXT }};aamp"
         shell: pwsh
 
       - name: Rename Windows binary
