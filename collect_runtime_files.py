@@ -16,7 +16,7 @@ def gather_files_from_pkg(pkg_module, patterns):
 def main():
     all_files = []
 
-    # aamp: collect .txt files (e.g., botw_hashed_names.txt, botw_numbered_names.txt)
+    # aamp: .txt data files
     try:
         aamp_files = gather_files_from_pkg(aamp, ["*.txt"])
         if not aamp_files:
@@ -26,7 +26,7 @@ def main():
         print("ERROR: aamp not installed or not found.", file=sys.stderr)
         sys.exit(1)
 
-    # rstb: collect needed TSVs (and any other data files)
+    # rstb: TSV/TXT data files
     try:
         rstb_files = gather_files_from_pkg(rstb, ["*.tsv", "*.txt"])
         if not rstb_files:
@@ -40,7 +40,6 @@ def main():
         print("ERROR: no runtime data files collected.", file=sys.stderr)
         sys.exit(1)
 
-    # Print each path on its own line
     for f in sorted(set(all_files)):
         print(f.strip())
 
