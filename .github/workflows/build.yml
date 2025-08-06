@@ -54,10 +54,9 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          AAMP_FILES=$(python get_requirements.py)
+          AAMP_FILES=$(python get_requirements.py | tr -d '\r')
           ADD_ARGS=()
           while IFS= read -r f; do
-            # for Linux the separator is colon
             ADD_ARGS+=(--add-data "$f:aamp")
           done <<< "$AAMP_FILES"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
@@ -67,10 +66,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          AAMP_FILES=$(python get_requirements.py)
+          AAMP_FILES=$(python get_requirements.py | tr -d '\r')
           ADD_ARGS=()
           while IFS= read -r f; do
-            # for Windows the separator is semicolon
             ADD_ARGS+=(--add-data "$f;aamp")
           done <<< "$AAMP_FILES"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
