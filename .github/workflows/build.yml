@@ -54,26 +54,37 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          set -e
           AAMP_FILES=$(python get_requirements.py | tr -d '\r')
           ADD_ARGS=()
           while IFS= read -r f; do
             ADD_ARGS+=(--add-data "$f:aamp")
           done <<< "$AAMP_FILES"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
-          mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
+          if [[ -f dist/bcml ]]; then
+            mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
+          else
+            echo "ERROR: dist/bcml was not created!" >&2
+            exit 1
+          fi
 
       - name: Build Executable (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          set -e
           AAMP_FILES=$(python get_requirements.py | tr -d '\r')
           ADD_ARGS=()
           while IFS= read -r f; do
             ADD_ARGS+=(--add-data "$f;aamp")
           done <<< "$AAMP_FILES"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
-          # rename after build
-          mv dist/bcml.exe dist/bcml-windows-${{ env.BCML_VERSION }}.exe
+          if [[ -f dist/bcml.exe ]]; then
+            mv dist/bcml.exe dist/bcml-windows-${{ env.BCML_VERSION }}.exe
+          else
+            echo "ERROR: dist/bcml.exe was not created!" >&2
+            exit 1
+          fi
 
       - name: Rename Windows binary
         if: runner.os == 'Windows'
