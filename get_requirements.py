@@ -19,4 +19,4 @@ def gather_aamp_txts():
         print(str(txt))
 
 if __name__ == "__main__":
-    gather_amp_txts()
+    gather_aamp_txts()
