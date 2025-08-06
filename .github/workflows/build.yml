@@ -50,15 +50,21 @@ jobs:
         shell: bash
         run: |
           set -e
-          echo "CWD before build: $(pwd)"
+          echo "CWD: $(pwd)"
           FILES=$(python collect_runtime_files.py | tr -d '\r')
           echo "Runtime data files to include:"
           echo "$FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
-            ADD_ARGS+=(--add-data "$f:aamp")
+            if [[ "$f" == *"/aamp/"* ]]; then
+              ADD_ARGS+=(--add-data "$f:aamp")
+            elif [[ "$f" == *"/rstb/"* ]]; then
+              ADD_ARGS+=(--add-data "$f:rstb")
+            else
+              ADD_ARGS+=(--add-data "$f:.")
+            fi
           done <<< "$FILES"
-          echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
+          echo "PyInstaller args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
           echo "Dist contents:"
           ls -l dist || true
@@ -74,15 +80,21 @@ jobs:
         shell: bash
         run: |
           set -e
-          echo "CWD before build: $(pwd)"
+          echo "CWD: $(pwd)"
           FILES=$(python collect_runtime_files.py | tr -d '\r')
           echo "Runtime data files to include:"
           echo "$FILES"
           ADD_ARGS=()
           while IFS= read -r f; do
-            ADD_ARGS+=(--add-data "$f;aamp")
+            if [[ "$f" == *"/aamp/"* ]]; then
+              ADD_ARGS+=(--add-data "$f:aamp")
+            elif [[ "$f" == *"/rstb/"* ]]; then
+              ADD_ARGS+=(--add-data "$f:rstb")
+            else
+              ADD_ARGS+=(--add-data "$f:.")
+            fi
           done <<< "$FILES"
-          echo "Running PyInstaller with args: ${ADD_ARGS[*]}"
+          echo "PyInstaller args: ${ADD_ARGS[*]}"
           pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
           echo "Dist contents:"
           ls -l dist || true
