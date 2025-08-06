@@ -40,22 +40,36 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Locate botw_hashed_names.txt from aamp
+      - name: Locate aamp text data files
         id: locate_aamp
         run: |
-          echo "AAMP_TXT=$(python get_requirements.py)" >> $GITHUB_ENV
+          # capture all txt paths into a variable with newline separation
+          AAMP_TXT_LIST=$(python get_requirements.py)
+          echo "AAMP_TXT_LIST<<EOF" >> $GITHUB_ENV
+          echo "$AAMP_TXT_LIST" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         shell: bash
 
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
         run: |
-          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py --add-data "${{ env.AAMP_TXT }}:aamp"
+          # prepare --add-data arguments (colon separator for Linux)
+          ADD_DATA_ARGS=""
+          while IFS= read -r path; do
+            ADD_DATA_ARGS="$ADD_DATA_ARGS --add-data \"${path}:aamp\""
+          done <<<'${AAMP_TXT_LIST}'
+          eval pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py $ADD_DATA_ARGS
 
       - name: Build Executable (Windows)
         if: runner.os == 'Windows'
+        shell: bash
         run: |
-          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py --add-data "${{ env.AAMP_TXT }};aamp"
-        shell: pwsh
+          # prepare --add-data arguments (semicolon separator for Windows)
+          ADD_DATA_ARGS=""
+          while IFS= read -r path; do
+            ADD_DATA_ARGS="$ADD_DATA_ARGS --add-data \"${path};aamp\""
+          done <<<'${AAMP_TXT_LIST}'
+          eval pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py $ADD_DATA_ARGS
 
       - name: Rename Windows binary
         if: runner.os == 'Windows'
