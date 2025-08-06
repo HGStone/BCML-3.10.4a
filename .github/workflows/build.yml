@@ -52,24 +52,30 @@ jobs:
 
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
+        shell: bash
         run: |
-          # prepare --add-data arguments (colon separator for Linux)
-          ADD_DATA_ARGS=""
-          while IFS= read -r path; do
-            ADD_DATA_ARGS="$ADD_DATA_ARGS --add-data \"${path}:aamp\""
-          done <<<'${AAMP_TXT_LIST}'
-          eval pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py $ADD_DATA_ARGS
+          AAMP_FILES=$(python get_requirements.py)
+          ADD_ARGS=()
+          while IFS= read -r f; do
+            # for Linux the separator is colon
+            ADD_ARGS+=(--add-data "$f:aamp")
+          done <<< "$AAMP_FILES"
+          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
+          mv dist/bcml dist/bcml-linux-${{ env.BCML_VERSION }}
 
       - name: Build Executable (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          # prepare --add-data arguments (semicolon separator for Windows)
-          ADD_DATA_ARGS=""
-          while IFS= read -r path; do
-            ADD_DATA_ARGS="$ADD_DATA_ARGS --add-data \"${path};aamp\""
-          done <<<'${AAMP_TXT_LIST}'
-          eval pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py $ADD_DATA_ARGS
+          AAMP_FILES=$(python get_requirements.py)
+          ADD_ARGS=()
+          while IFS= read -r f; do
+            # for Windows the separator is semicolon
+            ADD_ARGS+=(--add-data "$f;aamp")
+          done <<< "$AAMP_FILES"
+          pyinstaller --onefile --name bcml --icon bcml/data/bcml.ico -c bcml/__main__.py "${ADD_ARGS[@]}"
+          # rename after build
+          mv dist/bcml.exe dist/bcml-windows-${{ env.BCML_VERSION }}.exe
 
       - name: Rename Windows binary
         if: runner.os == 'Windows'
