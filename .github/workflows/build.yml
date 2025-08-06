@@ -44,6 +44,7 @@ jobs:
         id: locate_aamp
         run: |
           echo "AAMP_TXT=$(python get_requirements.py)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Build Executable (Linux)
         if: runner.os == 'Linux'
