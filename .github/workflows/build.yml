@@ -87,7 +87,7 @@ jobs:
           ADD_ARGS=()
           while IFS= read -r f; do
             if [[ "$f" == *"/aamp/"* ]]; then
-              ADD_ARGS+=(--add-data "$f:aamp")
+              ADD_ARGS+=(--add-data "$f;aamp")
             elif [[ "$f" == *"/rstb/"* ]]; then
               ADD_ARGS+=(--add-data "$f:rstb")
             else
