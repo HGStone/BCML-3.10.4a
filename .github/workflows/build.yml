@@ -89,7 +89,7 @@ jobs:
             if [[ "$f" == *"/aamp/"* ]]; then
               ADD_ARGS+=(--add-data "$f;aamp")
             elif [[ "$f" == *"/rstb/"* ]]; then
-              ADD_ARGS+=(--add-data "$f:rstb")
+              ADD_ARGS+=(--add-data "$f;rstb")
             else
               ADD_ARGS+=(--add-data "$f:.")
             fi
